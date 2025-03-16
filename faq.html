@@ -7,26 +7,43 @@
         <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
     
         <style>
-            body {
+            html {
                 top: 0; left: 0;
                 width: 99%; height: 97%;
                 position: absolute;
                 display: table;
-
+                background: #fffff4;
                 font-family: "Roboto Mono", monospace;
                 font-style: normal;
+                color: #223;
+                line-height: 1.8;
             }
 
-            p {
-                display: table-cell;
-                vertical-align: middle; text-align: center;
+            header,
+            body {
+                max-width: 704px;
+                margin: 0 auto;
+                padding: .5rem 1rem
             }
+
+            header>:first-child,
+            body>:first-child {
+                margin-top: 0
+            }
+
+            nav {
+                padding: .5rem 0
+            }   
         </style>
     </head>
+
+    <header>
+        <nav><a href="/"><-</a></nav>
+    </header>
+
     <body>
+        <h1>FAQ</h1>
         <p>
-            
-            <b>personal details:</b>
             <br>
                 age: 22
                 <br>
@@ -37,7 +54,6 @@
                 hobbies? cars and coffee
             <br>
             <br>
-            <a href="/">back <-</a>
         </p>
     </body>
 </html>
