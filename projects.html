@@ -1,55 +1,30 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>projects</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+        <title>ETHAN MAHER.projects</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-    
-        <style>
-            html {
-                top: 0; left: 0;
-                width: 99%; height: 97%;
-                position: absolute;
-                display: table;
-                background: #fffff4;
-                font-family: "Roboto Mono", monospace;
-                font-style: normal;
-                color: #223;
-                line-height: 1.8;
-            }
-
-            header,
-            body {
-                max-width: 704px;
-                margin: 0 auto;
-                padding: .5rem 1rem
-            }
-
-            header>:first-child,
-            body>:first-child {
-                margin-top: 0
-            }
-
-            nav {
-                padding: .5rem 0
-            }
-        </style>
+        
+        <link rel="stylesheet" type="text/css" href="styles.css">
     </head>
-
-    <header>
-        <nav><a href="/"><-</a></nav>
-    </header>
 
     <body>
         <h1>Projects</h1>
+        <hr>
+        <ul class="nav">
+            <a href="/index.html">home</a> ⸝⸝
+            <a href="/projects.html">projects</a> ⸝⸝
+            <a href="/blog.html">blog</a>
+        </ul>
+        <hr>
         <p>
             <b>Attendance Tracker</b> <i>2025</i><br>
             - UTDallas Capstone project proposed as an attendace tracking solution<br>
             - a <a href="https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor">blazor</a> desktop and web app that pair to a database that tracks past student attendance statistics
             for a professor to view<br>
-            <b><i>private repository</i></b><br>
-            
+            <b><i>private repository</i></b><br>     
             <br>
 
             <a href="https://github.com/ethanamaher/tuiperacer"><b>TUIpe Racer</b></a> <i>2024-curr</i><br>
@@ -57,14 +32,12 @@
             - uses the <a href="https://github.com/charmbracelet/bubbletea">bubbletea</a> 
                 and <a href="https://github.com/charmbracelet/lipgloss">lipgloss</a> libraries 
                 for the tui as well as a mysql database to store past scores<br>
-
             <br>
 
             <a href="https://github.com/ethanamaher/MNCA_Simulator"><b>MNCA Simulator</b></a> <i>2024</i><br>
             - an <a href="https://github.com/hajimehoshi/ebiten">ebiten game engine</a> based 
                 simulator to visualize the evolution of <a href="https://slackermanz.com/understanding-multiple-neighborhood-cellular-automata/">
                 multi neighborhood cellular automata</a><br>
-
             <br>
         </p>
     </body>

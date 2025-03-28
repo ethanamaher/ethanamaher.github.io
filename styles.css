@@ -1,0 +1,25 @@
+html {
+    background-color: #fffff4;
+    font-family: "Roboto Mono", monospace;
+    font-style: normal;
+    color: #223;
+    line-height: 1.8;   
+}
+
+body {
+    margin: 40px auto;
+    max-width: 760px;
+    line-height: 1.6;
+    font-size: 18px;
+    padding: 0 10px;
+}
+
+ul {
+    list-style-type: none;
+}
+
+ul.nav {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-evenly;
+}
