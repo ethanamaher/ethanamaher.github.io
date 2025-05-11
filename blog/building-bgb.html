@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+
+        <title>
+            ETHAN MAHER.Building Better-Git-Blame
+        </title>
+
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+        
+        <link rel="stylesheet" type="text/css" href="../styles.css">
+    </head>
+
+    <body>
+        <h1>Blog</h1>
+        <hr>
+        <ul class="nav">
+            <a href="/index.html">home</a> ⸝⸝
+            <a href="/projects.html">projects</a> ⸝⸝
+            <a href="/blog.html">blog</a>
+        </ul>
+        <hr>
+        <h2 style="display: inline;">Building Better-Git-Blame</h2>
+        <p>A Neovim plugin for better code history</p>
+        <p style="font-style: italic;">May 11, 2025</p>
+        <h3>I. Introduction</h3>
+
+        <p>We've all been there. Staring at a line of code, thinking: "Why is this here? Who wrote this? What were they thinking?"</p>
+        <p>Enter git blame, a command to show the commit that last modified each line in a file, who modified it, and when. But what if that last commit was just reformatting? What if the real history behind a change was several commits before? Traditional blame leaves a lot to be desired--for me, a deeper history on how each piece of code evolved.</p>
+        <p>This is the starting idea behind <a href="https://github.com/ethanamaher/better-git-blame.nvim">better-git-blame.nvim</a>. A way to provide a more comprehensive history of code selections.</p>
+        
+        
+        <h3>II. Core Problem: Beyond Single-Line History</h3>
+        <p>The goal is simple in concept: select a block of code and see a list of every commit that ever modified those lines, not just its latest edit.</p>
+        <p>
+            The breakthrough, as well as an oversight, came with discovering the -L option for git log.
+            <pre style="white-space: pre-wrap;">
+git log -L
+-L &lt;start&gt;,&lt;end&gt;:&lt;file&gt;
+-L:&lt;funcname&gt;:&lt;file&gt;
+Trace the evolution of the line range given by &lt;start&gt;,&lt;end&gt;, or by the function name regex &lt;funcname&gt;, within the &lt;file&gt;.
+            </pre>
+        </p>
+        
+        <p>This first option allows us the see the commit history for a selection of line. Perfect, isn't that exactly what we want? And here comes that oversight I just mentioned. It will work as long as the changes we want to see are in those lines but, more often than not, things will move around in our code quite a bit during development. We'll ignore that for now (because I didn't think about it until it was already implemented).</p>
+        
+        <p>
+            After a bit of experimenting I ended up finding the following command to work quite well with providing the information I want.
+            <pre style="white-space: pre-wrap;">
+                <code>
+git blame &lt;start&gt;,&lt;end&gt;:&lt;file&gt; --format=%H %ad %an %s --date=format:%Y-%m-%d %H:%M:%S
+
+ex (lines 10-20 in bgb's init.lua file):
+git blame 10,20:/home/ethan/Projects/better-git-blame.nvim/lua/better-git-blame/init.lua
+                </code>
+            </pre>
+            <h3>III. Bringing it to Lua</h3>
+            And it turns out vim makes it quite easy, when you make a visual selection it uses '&lt; and '&gt; as the line numbers of the selection range, so all I had to do was use the line1 and line2 arguments when getting the selection.
+            <pre style="white-space: pre-wrap;">
+                <code>
+-- get_visual_selection returns type { file_path, start_line, end_line }
+local selection = selection_utils.get_visual_selection(args.line1, args.line2)
+                </code>
+            </pre>
+            Then, all we have to do is turn that into a git log -L command and parse the output. To do this I made use of plenary's job and path modules
+            <pre style="white-space: pre-wrap;">
+                <code>
+M.get_commits(selection, repo_root, callback)
+    ...
+    local git_args = { "-C", repo_root, "log", range_arg, format_arg, date_arg }
+    Job:new({
+        command = "git",
+        args = git_args,
+        cwd = repo_root,
+        on_exit = vim.schedule_wrap(function(j, return_val)
+            -- return val other than 0, callback nil with error
+            ...
+            local commit_list = M.parse_git_log(j:result())
+            -- no commit list
+            ...
+            callback(commit_list, nil)
+        end),
+    }):start()
+end
+
+M.parse_git_log(output_lines)
+    local pattern = "^([0-9a-f]+)%s+([%d-]+)%s+([%d:]+)%s+(.-)%s+(.*)$"
+
+    for _, line in ipairs(output_lines) do
+        local hash, date, time, author, subject = line:match(pattern)
+        if hash and date and time and author and subject then
+            -- insert into table
+            ...
+        end
+    end
+end    
+                </code>
+            </pre>
+            Simply running the git log -L command and parsing each commit line output, then matching it to a regex pattern specified with the format option. The pattern matches in order of commit hash, date, time, author, and commit message.
+        </p>
+        <h3>IV. User Experience: Telescope ftw</h3>
+        <p>
+            Having the list of commits is one thing; presenting it usefully in another. I knew from the start I wanted to integrate with a Telescope picker, to provide an interactive, fuzzy-findable list.
+            <pre style="white-space: pre-wrap;">
+                <code>
+function M.launch_telescope_picker(commit_list, repo_root, selection)
+pickers.new({}, {
+    ...
+    finder = finders.new_table({
+        results = commit_list,
+        entry_maker = function(entry)
+            -- trim hash to first 6 characters
+            local trimmed_hash = string.sub(entry.hash, 1, 7)
+                
+            return {
+                value = entry,
+                display = string.format("%s (%s %s) | %s | %s", trimmed_hash, entry.date, entry.time, entry.author, entry.subject),
+                ordinal = entry.date .. " " .. entry.time,
+            }
+        end
+    }),
+    sorter = sorters.get_generic_fuzzy_sorter({}),
+    previewer = create_previewer(repo_root),
+    ...
+}):find()
+end
+                </code>
+            </pre>
+            </p>
+            <p>
+                I think the above code is pretty self-explanatory. We create a finder (the interactive list), a sorter for that list, and a previewer which will be used to preview the commit and its changes.
+            </p>
+            <p>
+                The sorter works off of the ordinal set in the table, it will sort by date first, then by time, giving us an in order view of all the changes.
+            </p>
+            <p>
+                For the diff view I found fugitive to be the best option, diffview second. So we have the following block to set the buffer preview window.
+                <pre style="white-space: pre-wrap;">
+                    <code>
+if vim.fn.exists(":Gvdiffsplit") == 2 then -- fugitive
+    vim.cmd("Gvdiffsplit " .. hash)
+elseif vim.fn.exists(":DiffviewOpen") == 2 then --diffview
+    vim.cmd("DiffviewOpen " .. hash .. ".." .. hash .. " -- " .. file)
+elseif vim.fn.exists(":Git") == 2 then
+    vim.cmd("tab Git show " .. hash)
+else
+    vim.cmd("tabnew | term git -C " .. vim.fn.shellescape(repo_root) .. " show " .. hash)
+end
+                    </code>
+                </pre>
+            </p>
+        </p>
+
+        <h3>V. I am stupid</h3>
+        <p>
+            At about this point I realized the line number mistake. I ended up taking a bit of time to think about a good way to implement a way to read the actual content of the selection and search based on that.
+        </p>
+        <p>
+            The options I came up with were a fuzzy, pickaxe, and regex search.
+        </p>
+        <p>
+            To explain a little bit about each, a fuzzy search is a way to find similar results that don't exactly match a search query. This is by far the best option, however it would make the search slower and be harder to implement. A pickaxe search is a non-fuzzy search. Git log has an option that allows you to search for an exact string (-S). This has its own drawbacks, mainly being small changes in that line won't be found, or you may find extra results if the string is not unique. But git log also has a regex option (-G). This is not much better than pickaxe but it's better than searching for an exact string match.
+        </p>
+        <p>
+            I ended up settling on the regex search for now, planning in the future to integrate fzf or some other tool to do a fuzzy search.
+        </p>
+        <p>
+            I remember spending an entire evening trying to get the multi-line regex for -G to work correctly, only to realize git grep processes hunks individually, meaning Git log doesn't allow you to search multiple line. So I settled on the heuristic of choosing the longest line in the selection, hoping that commits that change the surrounding lines also change that one.
+        </p>
+        <p>
+            Once we select the longest line we put it through a posix-escape function so we can use it in the git log command
+            <pre style="white-space: pre-wrap;">
+                <code>
+local function escape_posix_ere(text)
+    if not text then return "" end
+                    
+    text = text:gsub("\\", "\\\\")
+    text = text:gsub("%^", "\\^")
+    text = text:gsub("%$", "\\$")
+    text = text:gsub("%.", "\\.")
+    text = text:gsub("%[", "\\[")
+    text = text:gsub("%]", "\\]")
+    text = text:gsub("%(", "\\(")
+    text = text:gsub("%)", "\\)")
+    text = text:gsub("%*", "\\*")
+    text = text:gsub("%+", "\\+")
+    text = text:gsub("%?", "\\?")
+    text = text:gsub("{", "\\{")
+    text = text:gsub("}", "\\}")
+    text = text:gsub("|", "\\|")
+                    
+    return text
+end           
+                </code>
+            </pre>
+            Which outputs a string that looks something like
+            <pre style="white-space: pre-wrap;">
+                <code>
+vim\.notify\("No\s+file\s+name\s+associated\s+with\s+buffer",\s+vim\.log\.levels\.WARN,\s+\{\s+title="BetterGitBlame"\}\) 
+                </code>
+            </pre>
+            Pump that into our git log -G&lt;regex&gt; function and we get all the commits that match that regex. This allows for whitespace differences but is a far shot from what I would consider useful enough to add to my workflow, which is where the full fuzzy search comes in.
+        </p>
+        <h3>VI. Key Takeaways</h3>
+        <p>Making this plugin was more than just creating something I could use in my workflow. It ended up being a nice deep dive into several different areas in development.</p>
+        <ol>
+            <li>The Git CLI is crazy in-depth</li>
+            <p>I thought I had a good understanding of git before this project. But exploring the more nuanced corners and learning about all the different options for git log felt like discovering I had superpowers. The level of control Git gives you over output formatting is insance for programmatic parsing. Don't underestimate the power of tools you use regularly. There's an incredible depth waiting to be explored to unlock new solutions.</p>
+            <li>Telescope is awesome</li>
+            <p>I already knew this but yeah it's awesome as a generic UI framework. Super customizable and an easy way to provide a consistent experience for users.</p>
+            <li>Debugging regexes sucks</li>
+            <p>Trying to design regexes for -G that were flexible enough to catch variations in code structure ended up being a rabbit hole I couldn't find my way out of.</p>
+        </ol>
+        <h3>VII. Shameless Promotion</h3>
+        <p>Ty for reading. Checkout out <a href="https://github.com/ethanamaher/better-git-blame.nvim">better-git-blame.nvim</a> and try it out with Lazy</p>
+        <p>- Ethan</p>
+    </body>
+</html>
