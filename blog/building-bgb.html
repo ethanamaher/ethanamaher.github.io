@@ -79,7 +79,7 @@ M.get_commits(selection, repo_root, callback)
         args = git_args,
         cwd = repo_root,
         on_exit = vim.schedule_wrap(function(j, return_val)
-            -- return val other than 0, callback nil with error
+            -- return_val other than 0, callback(nil, j:stderr_result())
             ...
             local commit_list = M.parse_git_log(j:result())
             -- no commit list
@@ -102,11 +102,11 @@ M.parse_git_log(output_lines)
 end    
                 </code>
             </pre>
-            Simply running the git log -L command and parsing each commit line output, then matching it to a regex pattern specified with the format option. The pattern matches in order of commit hash, date, time, author, and commit message.
+            Running the git log -L command and parsing each commit line output, then matching it to a regex pattern specified with the format option. The pattern matches in order of commit hash, date, time, author, and commit message.
         </p>
         <h3>IV. User Experience: Telescope ftw</h3>
         <p>
-            Having the list of commits is one thing; presenting it usefully in another. I knew from the start I wanted to integrate with a Telescope picker, to provide an interactive, fuzzy-findable list.
+            Having the list of commits is one thing; presenting it usefully is another. I knew from the start I wanted to integrate with a Telescope picker, to provide an interactive, fuzzy-findable list.
             <pre style="white-space: pre-wrap;">
                 <code>
 function M.launch_telescope_picker(commit_list, repo_root, selection)
