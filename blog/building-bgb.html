@@ -5,14 +5,9 @@
 
 
         <title>
-            ETHAN MAHER.Building Better-Git-Blame
+            ethan maher | building bgb
         </title>
 
-
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
-        
         <link rel="stylesheet" type="text/css" href="../styles.css">
     </head>
 
@@ -34,8 +29,8 @@
         <p>We've all been there. Staring at a line of code, thinking: "Why is this here? Who wrote this? What were they thinking?"</p>
         <p>Enter git blame, a command to show the commit that last modified each line in a file, who modified it, and when. But what if that last commit was just reformatting? What if the real history behind a change was several commits before? Traditional blame leaves a lot to be desired--for me, a deeper history on how each piece of code evolved.</p>
         <p>This is the starting idea behind <a href="https://github.com/ethanamaher/better-git-blame.nvim">better-git-blame.nvim</a>. A way to provide a more comprehensive history of code selections.</p>
-        
-        
+
+
         <h3>II. Core Problem: Beyond Single-Line History</h3>
         <p>The goal is simple in concept: select a block of code and see a list of every commit that ever modified those lines, not just its latest edit.</p>
         <p>
@@ -47,9 +42,9 @@ git log -L
 Trace the evolution of the line range given by &lt;start&gt;,&lt;end&gt;, or by the function name regex &lt;funcname&gt;, within the &lt;file&gt;.
             </pre>
         </p>
-        
+
         <p>This first option allows us the see the commit history for a selection of line. Perfect, isn't that exactly what we want? And here comes that oversight I just mentioned. It will work as long as the changes we want to see are in those lines but, more often than not, things will move around in our code quite a bit during development. We'll ignore that for now (because I didn't think about it until it was already implemented).</p>
-        
+
         <p>
             After a bit of experimenting I ended up finding the following command to work quite well with providing the information I want.
             <pre style="white-space: pre-wrap;">
@@ -99,7 +94,7 @@ M.parse_git_log(output_lines)
             ...
         end
     end
-end    
+end
                 </code>
             </pre>
             Running the git log -L command and parsing each commit line output, then matching it to a regex pattern specified with the format option. The pattern matches in order of commit hash, date, time, author, and commit message.
@@ -117,7 +112,7 @@ pickers.new({}, {
         entry_maker = function(entry)
             -- trim hash to first 6 characters
             local trimmed_hash = string.sub(entry.hash, 1, 7)
-                
+
             return {
                 value = entry,
                 display = string.format("%s (%s %s) | %s | %s", trimmed_hash, entry.date, entry.time, entry.author, entry.message),
@@ -179,7 +174,7 @@ end
                 <code>
 local function escape_posix_ere(text)
     if not text then return "" end
-                    
+
     text = text:gsub("\\", "\\\\")
     text = text:gsub("%^", "\\^")
     text = text:gsub("%$", "\\$")
@@ -194,15 +189,15 @@ local function escape_posix_ere(text)
     text = text:gsub("{", "\\{")
     text = text:gsub("}", "\\}")
     text = text:gsub("|", "\\|")
-                    
+
     return text
-end           
+end
                 </code>
             </pre>
             Which outputs a string that looks something like
             <pre style="white-space: pre-wrap;">
                 <code>
-vim\.notify\("No\s+file\s+name\s+associated\s+with\s+buffer",\s+vim\.log\.levels\.WARN,\s+\{\s+title="BetterGitBlame"\}\) 
+vim\.notify\("No\s+file\s+name\s+associated\s+with\s+buffer",\s+vim\.log\.levels\.WARN,\s+\{\s+title="BetterGitBlame"\}\)
                 </code>
             </pre>
             Pump that into our git log -G&lt;regex&gt; function and we get all the commits that match that regex. This allows for whitespace differences but is a far shot from what I would consider useful enough to add to my workflow, which is where the full fuzzy search comes in.
@@ -210,8 +205,8 @@ vim\.notify\("No\s+file\s+name\s+associated\s+with\s+buffer",\s+vim\.log\.levels
         <h3>VI. Treesitter the goat</h3>
         <p>
             While working on the command to integrate with git log -L:<func_name>:<filename> I had to think about how I would find what function a selection is in. My solution to this was to find the smallest node that encompasses the selection and iterate through its parent nodes until we find a function declaration.
-            <img src="../resources/treesitter_example.png"> 
-            
+            <img src="../resources/treesitter_example.png">
+
                 <pre style="white-space: pre-wrap;">
                     <code>
 local current_node = root:descendant_for_range(target_start_line, target_end_line, target_start_line, target_end_line)
@@ -220,7 +215,7 @@ while current_node do
     if is_function_declaration_node(current_node) then
         -- update target selection lines
         local body_start_line, _, body_end_line, _ = current_node:range()
-        
+
         -- if function declaration is before the start of the selection
         if body_start_line < target_start_line then target_start_line = body_start_line end
         -- dont need to update end lines since its not in selection but i do anyway
@@ -254,7 +249,7 @@ end
             </ol>
         </p>
 
-    
+
         <h3>VIII. Shameless Promotion</h3>
         <p>Ty for reading. Check out <a href="https://github.com/ethanamaher/better-git-blame.nvim">better-git-blame.nvim</a> (and star pretty please) and try it out with Lazy</p>
         <p>- Ethan</p>

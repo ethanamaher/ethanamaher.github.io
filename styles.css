@@ -1,17 +1,15 @@
 html {
     background-color: #fffff4;
-    font-family: "Roboto Mono", monospace;
-    font-style: normal;
+    font-family: monospace;
     color: #223;
-    line-height: 1.8;   
+    line-height: 1.8;
 }
 
 body {
-    margin: 40px auto;
-    max-width: 760px;
-    line-height: 1.6;
-    font-size: 18px;
-    padding: 0 10px;
+    margin: 0 auto;
+    max-width: 75ch;
+    font-size: 125%;
+    padding: 0 1.5rem;
 }
 
 ul {
