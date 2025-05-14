@@ -92,8 +92,8 @@ M.parse_git_log(output_lines)
     local pattern = "^([0-9a-f]+)%s+([%d-]+)%s+([%d:]+)%s+(.-)%s+(.*)$"
 
     for _, line in ipairs(output_lines) do
-        local hash, date, time, author, subject = line:match(pattern)
-        if hash and date and time and author and subject then
+        local hash, date, time, author, message = line:match(pattern)
+        if hash and date and time and author and message then
             -- insert into table
             ...
         end
@@ -119,7 +119,7 @@ pickers.new({}, {
                 
             return {
                 value = entry,
-                display = string.format("%s (%s %s) | %s | %s", trimmed_hash, entry.date, entry.time, entry.author, entry.subject),
+                display = string.format("%s (%s %s) | %s | %s", trimmed_hash, entry.date, entry.time, entry.author, entry.message),
                 ordinal = entry.date .. " " .. entry.time,
             }
         end
@@ -206,17 +206,55 @@ vim\.notify\("No\s+file\s+name\s+associated\s+with\s+buffer",\s+vim\.log\.levels
             </pre>
             Pump that into our git log -G&lt;regex&gt; function and we get all the commits that match that regex. This allows for whitespace differences but is a far shot from what I would consider useful enough to add to my workflow, which is where the full fuzzy search comes in.
         </p>
-        <h3>VI. Key Takeaways</h3>
-        <p>Making this plugin was more than just creating something I could use in my workflow. It ended up being a nice deep dive into several different areas in development.</p>
-        <ol>
-            <li>The Git CLI is crazy in-depth</li>
-            <p>I thought I had a good understanding of git before this project. But exploring the more nuanced corners and learning about all the different options for git log felt like discovering I had superpowers. The level of control Git gives you over output formatting is insance for programmatic parsing. Don't underestimate the power of tools you use regularly. There's an incredible depth waiting to be explored to unlock new solutions.</p>
-            <li>Telescope is awesome</li>
-            <p>I already knew this but yeah it's awesome as a generic UI framework. Super customizable and an easy way to provide a consistent experience for users.</p>
-            <li>Debugging regexes sucks</li>
-            <p>Trying to design regexes for -G that were flexible enough to catch variations in code structure ended up being a rabbit hole I couldn't find my way out of.</p>
-        </ol>
-        <h3>VII. Shameless Promotion</h3>
+        <h3>VI. Treesitter the goat</h3>
+        <p>
+            While working on the command to integrate with git log -L:<func_name>:<filename> I had to think about how I would find what function a selection is in. My solution to this was to find the smallest node that encompasses the selection and iterate through its parent nodes until we find a function declaration.
+            <img src="../resources/treesitter_example.png"> 
+            
+                <pre style="white-space: pre-wrap;">
+                    <code>
+local current_node = root:descendant_for_range(target_start_line, target_end_line, target_start_line, target_end_line)
+
+while current_node do
+    if is_function_declaration_node(current_node) then
+        -- update target selection lines
+        local body_start_line, _, body_end_line, _ = current_node:range()
+        
+        -- if function declaration is before the start of the selection
+        if body_start_line < target_start_line then target_start_line = body_start_line end
+        -- dont need to update end lines since its not in selection but i do anyway
+        if body_end_line > target_end_line then target_end_line = body_end_line end
+    end
+        current_node = current_node:parent()
+end
+
+for id, node, metadata in query:iter_captures(root, bufnr, target_start_line, target_end_line) do
+    -- id and metadata unused for now, but they are options for later maybe
+    local name = vim.treesitter.get_node_text(node, 0)
+    if not name_set[name] then
+        table.insert(names, name) -- insert function name into names list
+        name_set[name] = true
+    end
+end
+                </code>
+            </pre>
+            The above snippet outlines how the search for function names. This approach also allows us to find multiple function names in a selection and grab all commits for those functions.
+        </p>
+        <h3>VII. Key Takeaways</h3>
+        <p>
+            Making this plugin was more than just creating something I could use in my workflow. It ended up being a nice deep dive into several different areas in development.
+            <ol>
+                <li>The Git CLI is crazy in-depth</li>
+                <p>I thought I had a good understanding of git before this project. But exploring the more nuanced corners and learning about all the different options for git log felt like discovering I had superpowers. The level of control Git gives you over output formatting is insance for programmatic parsing. Don't underestimate the power of tools you use regularly. There's an incredible depth waiting to be explored to unlock new solutions.</p>
+                <li>Telescope is awesome</li>
+                <p>I already knew this but yeah it's awesome as a generic UI framework. Super customizable and an easy way to provide a consistent experience for users.</p>
+                <li>Debugging regexes sucks</li>
+                <p>Trying to design regexes for -G that were flexible enough to catch variations in code structure ended up being a rabbit hole I couldn't find my way out of.</p>
+            </ol>
+        </p>
+
+    
+        <h3>VIII. Shameless Promotion</h3>
         <p>Ty for reading. Check out <a href="https://github.com/ethanamaher/better-git-blame.nvim">better-git-blame.nvim</a> (and star pretty please) and try it out with Lazy</p>
         <p>- Ethan</p>
     </body>
