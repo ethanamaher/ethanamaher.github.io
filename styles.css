@@ -1,30 +1,68 @@
 html {
     background-color: #fffff4;
-    font-family: "Roboto Mono", monospace;
-    font-style: normal;
+    font-family: monospace;
     color: #223;
-    line-height: 1.8;   
+    line-height: 1.8;
 }
 
 body {
-    margin: 40px auto;
-    max-width: 760px;
-    line-height: 1.6;
-    font-size: 18px;
-    padding: 0 10px;
+    margin: 0 auto;
+    max-width: 75ch;
+    font-size: 125%;
+    padding: 0.5rem 0 1.5rem;
 }
 
-ul {
-    list-style-type: none;
-}
-
-ul.nav {
+nav ul {
+    margin: 0;
+    padding: 0;
     display: flex;
-    align-items: stretch;
-    justify-content: space-evenly;
+    border: 1px solid #223;
+}
+
+nav li {
+    list-style: none;
+}
+
+nav li * {
+    display: block;
+    padding: 0.5rem 0.5rem;
+}
+
+nav li strong {
+    padding-left: 1.5rem;
+    padding-right:0.5rem;
+}
+
+nav a {
+    text-decoration: none;
+}
+
+nav a:hover {
+    background: #dcdcdc;
+}
+
+.footer {
+    margin: 0 auto;
+    text-align: center;
+    width: 72ch;
+    padding-top: 10px;
 }
 
 img {
     max-width:100%;
     height: auto;
+}
+
+pre {
+    margin: 0 auto;
+    text-align: left;
+    line-height: 1.3;
+}
+
+.content {
+    margin: 0 auto;
+    text-align: left;
+    width: 80ch;
+    padding-bottom: 15px;
+    padding-top: 10px;
 }
