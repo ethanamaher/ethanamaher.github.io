@@ -1,15 +1,12 @@
+
 <!DOCTYPE html>
-<html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-
         <title>
-            ethan maher | building bgb
+            ethan maher | Building BGB
         </title>
-
         <link rel="stylesheet" type="text/css" href="../styles.css">
     </head>
-
     <body>
         <nav>
             <ul>
@@ -19,12 +16,14 @@
                 <li><a href="/blog.html">blog</a></li>
             </ul>
         </nav>
-        <h2 style="display: inline;">Building Better-Git-Blame</h2>
-        <p>A Neovim plugin for better code history</p>
-        <p style="font-style: italic;">May 11, 2025</p>
-        <img src="../resources/better-git-blame.png">
 <pre>
-<h3>I. Introduction</h3>
+
+                                                                      2025-05-15
+
+<strong>                                 Building BGB</strong>
+
+Intro
+
 We've all been there. Staring at a line of code, thinking: "Why is this
 here? Who wrote this? What were they thinking?"
 
@@ -38,281 +37,271 @@ This is the core idea behind better-git-blame, to provide a more
 comprehensive history of code selections.
 
 
-<h3>II. Core Problem: Beyond Single-Line History</h3>
-The goal is simple in concept: select a block of code and see a list of
-every commit that ever modified those lines, not just its latest edit.
+<strong>I. Core Problem: Beyond Single-Line History</strong>
+
+    The goal is simple in concept: select a block of code and see a list of
+    every commit that ever modified those lines, not just its latest edit.
 
 
-The breakthrough, as well as an oversight, came with discovering the -L
-option for git log.
+    The breakthrough, as well as an oversight, came with discovering the -L
+    option for git log.
 
-<code>
-git log -L
-    -L &lt;start&gt;,&lt;end&gt;:&lt;file&gt;
-    -L:&lt;funcname&gt;:&lt;file&gt;
-        Trace the evolution of the line range given by &lt;start&gt;,&lt;end&gt;,
-        or by the function name regex &lt;funcname&gt;, within the &lt;file&gt;.
-</code>
+        git log -L
+        -L &lt;start&gt;,&lt;end&gt;:&lt;file&gt;
+        -L:&lt;funcname&gt;:&lt;file&gt;
+            Trace the evolution of the line range given by &lt;start&gt;,&lt;end&gt;,
+            or by the function name regex &lt;funcname&gt;, within the &lt;file&gt;.
 
-This first option allows us the see the commit history for a selection
-of line. Perfect, isn't that exactly what we want? And here comes that
-oversight I just mentioned. It will work as long as the changes we want
-to see are in those lines but, more often than not, things will move
-around in our code quite a bit during development. We'll ignore that
-for now (because I didn't think about it until it was already
-implemented).
+    This first option allows us the see the commit history for a selection of
+    line. Perfect, isn't that exactly what we want? And here comes that
+    oversight I just mentioned. It will work as long as the changes we want to
+    see are in those lines but, more often than not, things will move around in
+    our code quite a bit during development. We'll ignore that for now (because
+    I didn't think about it until it was already implemented).
 
-After a bit of experimenting I ended up finding the following command
-to work quite well with providing the information I want.
+    After a bit of experimenting I ended up finding the following command to
+    work quite well with providing the information I want.
 
-<code>
-git blame &lt;start&gt;,&lt;end&gt;:&lt;file&gt; --format=%H %ad %an %s
-            --date=format:%Y-%m-%d %H:%M:%S
-</code>
+        git blame &lt;start&gt;,&lt;end&gt;:&lt;file&gt; --format=%H %ad %an %s
+                    --date=format:%Y-%m-%d %H:%M:%S
 
-<h3>III. Bringing it to Lua</h3>
-And it turns out vim makes it quite easy, when you make a visual
-selection it uses '&lt; and '&gt; as the line numbers of the selection
-range, so all I had to do was use the line1 and line2 arguments when
-getting the selection.
+<strong>II. Bringing it to Lua</strong>
 
--- get_visual_selection returns { file_path, start_line, end_line }
-local selection = selection_utils.get_visual_selection
-                    (
-                        args.line1, args.line2
-                    )
+    And it turns out vim makes it quite easy, when you make a visual selection
+    it uses '&lt; and '&gt; as the line numbers of the selection range, so all I had
+    to do was use the line1 and line2 arguments when getting the selection.
 
-Then, all we have to do is turn that into a git log -L command and
-parse the output. To do this I used of plenary's job and path modules
+        -- get_visual_selection returns { file_path, start_line, end_line }
+        local selection = selection_utils.get_visual_selection(
+                                                                args.line1,
+                                                                args.line2)
 
-<code>
-M.get_commits(selection, repo_root, callback)
-    ...
-    local git_args = { "-C", repo_root, "log", range_arg,
-                                format_arg, date_arg }
-    Job:new({
-        command = "git",
-        args = git_args,
-        cwd = repo_root,
-        on_exit = vim.schedule_wrap(function(j, return_val)
-            -- return_val other than 0, callback(nil, stderr)
+    Then, all we turn that into a git log -L command and parse the output. To do
+    this I used of plenary's job and path modules
+
+        M.get_commits(selection, repo_root, callback)
             ...
-            local commit_list = M.parse_git_log(j:result())
-            -- no commit list
-            ...
-            callback(commit_list, nil)
-        end),
-    }):start()
-end
-
-M.parse_git_log(output_lines)
-    local pattern = "^([0-9a-f]+)%s+([%d-]+)%s+([%d:]+)%s+(.-)%s+(.*)$"
-
-    for _, line in ipairs(output_lines) do
-        local hash, date, time, author, message = line:match(pattern)
-        if hash and date and time and author and message then
-            -- insert into table
-            ...
+            local git_args = { "-C", repo_root, "log", range_arg,
+                                        format_arg, date_arg }
+            Job:new({
+                command = "git",
+                args = git_args,
+                cwd = repo_root,
+                on_exit = vim.schedule_wrap(function(j, return_val)
+                    -- return_val other than 0, callback(nil, stderr)
+                    ...
+                    local commit_list = M.parse_git_log(j:result())
+                    -- no commit list
+                    ...
+                    callback(commit_list, nil)
+                end),
+            }):start()
         end
-    end
-end
-</code>
 
-Running the git log -L command and parsing each commit line output,
-then matching it to a regex pattern specified with the format option.
-The pattern matches in order of commit hash, date, time, author, and
-commit message.
+        M.parse_git_log(output_lines)
+            local pattern = "^([0-9a-f]+)%s+([%d-]+)%s+([%d:]+)%s+(.-)%s+(.*)$"
 
-<h3>IV. User Experience: Telescope ftw</h3>
-Having the list of commits is one thing; presenting it usefully is
-another. I knew from the start I wanted to integrate with a Telescope
-picker, to provide an interactive, fuzzy-findable list.
-
-<code>
-function M.launch_telescope_picker(commit_list, repo_root, selection)
-pickers.new({}, {
-    ...
-    finder = finders.new_table({
-        results = commit_list,
-        entry_maker = function(entry)
-            -- trim hash to first 6 characters
-            local trimmed_hash = string.sub(entry.hash, 1, 7)
-
-            return {
-                value = entry,
-                display = string.format("%s (%s %s) | %s | %s",
-                    trimmed_hash,
-                    entry.date,
-                    entry.time,
-                    entry.author,
-                    entry.message),
-
-                ordinal = entry.date .. " " .. entry.time,
-            }
+            for _, line in ipairs(output_lines) do
+                local hash, date, time, author, message = line:match(pattern)
+                if hash and date and time and author and message then
+                    -- insert into table
+                    ...
+                end
+            end
         end
-    }),
-    sorter = sorters.get_generic_fuzzy_sorter({}),
-    previewer = create_previewer(repo_root),
-    ...
-}):find()
-end
-</code>
-I think the above code is pretty self-explanatory. We create a finder
-(the interactive list), a sorter for that list, and a previewer which
-will be used to preview the commit and its changes.
 
-The sorter works off of the ordinal set in the table, it will sort by
-date first, then by time, giving us an in-order view of every change.
+    Running the git log -L command and parsing each commit line output, then
+    matching it to a regex pattern specified with the format option. The pattern
+    matches in order of commit hash, date, time, author, and commit message.
 
-For the diff view I found fugitive to be the best option, diffview
-second. The following block is to set the buffer preview window.
+<strong>III. User Experience: Telescope ftw</strong>
 
-<code>
-if vim.fn.exists(":Gvdiffsplit") == 2 then -- fugitive
-    vim.cmd("Gvdiffsplit " .. hash)
-elseif vim.fn.exists(":DiffviewOpen") == 2 then --diffview
-    vim.cmd("DiffviewOpen " .. hash .. ".." .. hash .. " -- " .. file)
-elseif vim.fn.exists(":Git") == 2 then
-    vim.cmd("tab Git show " .. hash)
-else
-    vim.cmd("tabnew | term git -C " ..
-                    vim.fn.shellescape(repo_root) .. " show " .. hash)
-end
-</code>
+    Having the list of commits is one thing; presenting it usefully is another.
+    I knew from the start I wanted to integrate with a Telescope picker, to
+    provide an interactive, fuzzy-findable list.
 
-<h3>V. I am stupid</h3>
-At about this point I realized the line number mistake. I ended up
-taking a bit of time to think about a good way to implement a way to
-read the actual content of the selection and search based on that.
+        function M.launch_telescope_picker(commit_list, repo_root, selection)
+        pickers.new({}, {
+            ...
+            finder = finders.new_table({
+                results = commit_list,
+                entry_maker = function(entry)
+                    -- trim hash to first 6 characters
+                    local trimmed_hash = string.sub(entry.hash, 1, 7)
 
-The options I came up with were a fuzzy, pickaxe, and regex search.
+                    return {
+                        value = entry,
+                        display = string.format("%s (%s %s) | %s | %s",
+                            trimmed_hash,
+                            entry.date,
+                            entry.time,
+                            entry.author,
+                            entry.message),
 
-To explain a little bit about each, a fuzzy search is a way to find
-similar results that don't exactly match a search query. This is by far
-the best option, however it would make the search slower and be harder
-to implement. A pickaxe search is a non-fuzzy search. Git log has an
-option that allows you to search for an exact string (-S). This has its
-own drawbacks, mainly being small changes in that line won't be found,
-or you may find extra results if the string is not unique. But git log
-also has a regex option (-G). This is not much better than pickaxe but
-it's better than searching for an exact string match.
+                        ordinal = entry.date .. " " .. entry.time,
+                    }
+                end
+            }),
+            sorter = sorters.get_generic_fuzzy_sorter({}),
+            previewer = create_previewer(repo_root),
+            ...
+        }):find()
+        end
 
-I ended up settling on the regex search for now, planning in the future
-to integrate fzf or some other tool to do a fuzzy search.
+    We create a finder (the interactive list), a sorter for that list, and a
+    previewer which will be used to preview the commit and its changes.
 
-I remember spending an entire evening trying to get the multi-line
-regex for -G to work correctly, only to realize git grep processes each
-hunk individually, meaning Git log doesn't allow you to search multiple
-line. So I settled on the heuristic of choosing the longest line in the
-selection, hoping that commits that change the surrounding lines also
-change that one.
+    The sorter works off of the ordinal set in the table, it will sort by date
+    first, then by time, giving us an in-order view of every change.
 
-Once we select the longest line we put it through a posix-escape
-function so we can use it in the git log command
+    For the diff view I found fugitive to be the best option, diffview second.
+    The following block is to set the buffer preview window.
 
-<code>
-local function escape_posix_ere(text)
-    if not text then return "" end
+        if vim.fn.exists(":Gvdiffsplit") == 2 then -- fugitive
+            vim.cmd("Gvdiffsplit " .. hash)
+        elseif vim.fn.exists(":DiffviewOpen") == 2 then --diffview
+            vim.cmd("DiffviewOpen " .. hash .. ".." .. hash .. " -- " .. file)
+        elseif vim.fn.exists(":Git") == 2 then
+            vim.cmd("tab Git show " .. hash)
+        else
+            vim.cmd("tabnew | term git -C " ..
+                            vim.fn.shellescape(repo_root) .. " show " .. hash)
+        end
 
-    text = text:gsub("\\", "\\\\")
-    text = text:gsub("%^", "\\^")
-    text = text:gsub("%$", "\\$")
-    text = text:gsub("%.", "\\.")
-    text = text:gsub("%[", "\\[")
-    text = text:gsub("%]", "\\]")
-    text = text:gsub("%(", "\\(")
-    text = text:gsub("%)", "\\)")
-    text = text:gsub("%*", "\\*")
-    text = text:gsub("%+", "\\+")
-    text = text:gsub("%?", "\\?")
-    text = text:gsub("{", "\\{")
-    text = text:gsub("}", "\\}")
-    text = text:gsub("|", "\\|")
+<strong>IV. I am stupid</strong>
 
-    return text
-end
-</code>
-Which outputs a string that looks something like
-<code>
-vim\.notify\("No\s+file\s+name\s+associated\s+with\s+buffer",\s+vim\
-            .log\.levels\.WARN,\s+\{\s+title="BetterGitBlame"\}\)
-</code>
-Pump that into our git log -Glregexg function and we get every commit
-that matches that regex. This allows for whitespace differences but is
-a far shot from what I would consider useful enough to add to my
-workflow, which is where the full fuzzy search comes in.
+    At about this point I realized the line number mistake. I ended up taking a
+    bit of time to think about a good way to implement a way to read the actual
+    content of the selection and search based on that.
 
-<h3>VI. Treesitter the goat</h3>
-While working on the command to integrate with git log -L with a
-function name I had to think about how I would find what function a
-selection is in. My solution to this was to find the smallest node that
-encompasses the selection and iterate through its parent nodes until we
-find a function declaration.
+    The options I came up with were a fuzzy, pickaxe, and regex search.
+
+    To explain a little bit about each, a fuzzy search is a way to find similar
+    results that don't exactly match a search query. This is by far the best
+    option, however it would make the search slower and be harder to implement.
+    A pickaxe search is a non-fuzzy search. Git log has an option that allows
+    you to search for an exact string (-S). This has its own drawbacks, mainly
+    being small changes in that line won't be found, or you may find extra
+    results if the string is not unique. But git log also has a regex option
+    (-G). This is not much better than pickaxe but it's better than searching
+    for an exact string match.
+
+    I ended up settling on the regex search for now, planning in the future to
+    integrate fzf or some other tool to do a fuzzy search.
+
+    I remember spending an entire evening trying to get the multi-line regex for
+    -G to work correctly, only to realize git grep processes each hunk
+    individually, meaning Git log doesn't allow you to search multiple line. So
+    I settled on the heuristic of choosing the longest line in the selection,
+    hoping that commits that change the surrounding lines also change that one.
+
+    Once we select the longest line we put it through a posix-escape function so
+    we can use it in the git log command
+
+        local function escape_posix_ere(text)
+            if not text then return "" end
+
+            text = text:gsub("\\", "\\\\")
+            text = text:gsub("%^", "\\^")
+            text = text:gsub("%$", "\\$")
+            text = text:gsub("%.", "\\.")
+            text = text:gsub("%[", "\\[")
+            text = text:gsub("%]", "\\]")
+            text = text:gsub("%(", "\\(")
+            text = text:gsub("%)", "\\)")
+            text = text:gsub("%*", "\\*")
+            text = text:gsub("%+", "\\+")
+            text = text:gsub("%?", "\\?")
+            text = text:gsub("{", "\\{")
+            text = text:gsub("}", "\\}")
+            text = text:gsub("|", "\\|")
+
+            return text
+        end
+
+    Which outputs a string that looks something like
+
+        vim\.notify\("No\s+file\s+name\s+associated\s+with\s+buffer",\s+vim\
+                    .log\.levels\.WARN,\s+\{\s+title="BetterGitBlame"\}\)
+
+    Pump that into our git log -Glregexg function and we get every commit that
+    matches that regex. This allows for whitespace differences but is a far shot
+    from what I would consider useful enough to add to my workflow, which is
+    where the full fuzzy search comes in.
+
+<strong>V. Treesitter the goat</strong>
+
+    While working on the command to integrate with git log -L with a function
+    name I had to think about how I would find what function a selection is in.
+    My solution to this was to find the smallest node that encompasses the
+    selection and iterate through its parent nodes until we find a function
+    declaration.
 
 <img src="../resources/treesitter_example.png">
 
-<code>
-local cur_node = root:descendant_for_range(
-                            target_start_line, target_end_line,
-                            target_start_line, target_end_line
-                        )
+        local cur_node = root:descendant_for_range(
+                                    target_start_line, target_end_line,
+                                    target_start_line, target_end_line
+                                )
 
-while cur_node do
-    if is_function_declaration_node(cur_node) then
-        -- update target selection lines
-        local body_start_line, _, body_end_line, _ = cur_node:range()
+        while cur_node do
+            if is_function_declaration_node(cur_node) then
+                -- update target selection lines
+                local body_start_line, _, body_end_line, _ = cur_node:range()
 
-        -- if function declaration is before the start of the selection
-        if body_start_line &lt; target_start_line then
-            target_start_line = body_start_line
+                -- if function declaration is before the start of the selection
+                if body_start_line &lt; target_start_line then
+                    target_start_line = body_start_line
+                end
+
+                -- dont need to update end lines since its not in selection
+            end
+                cur_node = cur_node:parent()
         end
 
-        -- dont need to update end lines since its not in selection
-    end
-        cur_node = cur_node:parent()
-end
+        for _, node, _ in query:iter_captures(
+                        root, bufnr, target_start_line, target_end_line) do
 
-for _, node, _ in query:iter_captures(
-                root, bufnr, target_start_line, target_end_line) do
+            local name = vim.treesitter.get_node_text(node, 0)
+            if not name_set[name] then
+                table.insert(names, name) -- insert function name into list
+                name_set[name] = true
+            end
+        end
 
-    local name = vim.treesitter.get_node_text(node, 0)
-    if not name_set[name] then
-        table.insert(names, name) -- insert function name into list
-        name_set[name] = true
-    end
-end
-</code>
-The above snippet outlines how the search for function names. This
-approach also allows us to find multiple function names in a selection
-and grab all commits for those functions.
+    The above snippet outlines how the search for function names. This approach
+    also allows us to find multiple function names in a selection and grab all
+    commits for those functions.
 
-<h3>VII. Key Takeaways</h3>
-Making this plugin was more than just creating something I could use in
-my workflow. It ended up being a nice deep dive into several different
-areas in development.
+<strong>VI. Key Takeaways</strong>
 
-<strong>- The Git CLI is crazy in-depth</strong>
-I thought I had a good understanding of git before this project. But
-exploring the more nuanced corners and learning about all the different
-options for git log felt like discovering I had superpowers. The level
-of control Git gives you over output formatting is insance for
-programmatic parsing. Don't underestimate the power of tools you use
-regularly. There's an incredible depth waiting to be explored to unlock
-new solutions.
+    Making this plugin was more than just creating something I could use in my
+    workflow. It ended up being a nice deep dive into several different areas in
+    development.
 
-<strong>- Telescope is awesome</strong>
-I already knew this but yeah it's awesome as a generic UI framework.
-Super customizable and an easy way to provide a consistent experience
-for users.
+    <strong>- The Git CLI is crazy in-depth</strong>
+        I thought I had a good understanding of git before this project. But
+        exploring the more nuanced corners and learning about all the different
+        options for git log felt like discovering I had superpowers. The level
+        of control Git gives you over output formatting is insance for
+        programmatic parsing. Don't underestimate the power of tools you use
+        regularly. There's an incredible depth waiting to be explored to unlock
+        new solutions.
 
-<strong>- Debugging regexes sucks</strong>
-Trying to design regexes for -G that were flexible enough to catch
-variations in code structure ended up being a rabbit hole I couldn't
-find my way out of.
+    <strong>- Telescope is awesome</strong>
+        I already knew this but yeah it's awesome as a generic UI framework.
+        Super customizable and an easy way to provide a consistent experience
+        for users.
 
-<h3>VIII. Shameless Promotion</h3>
-Ty for reading. Check out <a href="https://github.com/ethanamaher/better-git-blame.nvim">better-git-blame.nvim</a> and try it out
-    - Ethan
+    <strong>- Debugging regexes sucks</strong>
+        Trying to design regexes for -G that were flexible enough to catch
+        variations in code structure ended up being a rabbit hole I couldn't
+        find my way out of.
+
+<strong>VII. Shameless Promotion</strong>
+
+    Ty for reading. Check out <a href="https://github.com/ethanamaher/better-git-blame.nvim">better-git-blame.nvim</a> and try it out
+        - Ethan
 </pre>
         <hr>
         <div class="footer">
