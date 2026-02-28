@@ -1,62 +1,130 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-        <title>ethan maher | projects</title>
-        <link rel="stylesheet" type="text/css" href="styles.css">
-    </head>
 
-    <body>
-        <center>
-            <a href="index.html">home</a> 
-            |
-            <a href="projects.html">projects</a>
-        </center>
-        <p>
-            <b>Real-Time DNS Provenance Monitor <i>(Internal Research Project), Private Repository</i></b> <i>2025</i>
-            <br>
-            - Developed a C# application to correlate raw network events with DNS query logs, turning ambiguous IP alerts into domain names, offering a greater view on indicators of compromise<br>
-            - Provides real-time visibility into DNS and system network activity by streaming raw DNS events over ETW and system provenance events from machines in the network<br>
-            - Designed the application asynchronously to handle multiple concurrent, high-volume event streams with minimal performance overhead<br>
-            <br>
-            <a href="https://github.com/ethanamaher/todo-sidebar.nvim"><b>todo-sidebar</b></a> <i>2025</i><br>
-            - Neovim plugin to view all TODO type statements in your git repo. </br>
-            - checks all lines in files for customizable statements like TODO, FIXME, REVIEW, etc. and opens a sidebar window to view and jump to thse statements<br>
-            <br>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <title>~*~ Ethan Maher | Projects ~*~</title>
 
-            <a href="https://github.com/ethanamaher/better-git-blame.nvim"><b>better-git-blame</b></a> <i>2025</i><br>
-            - Neovim plugin to view the Git commit history for selected code blocks. </br>
-            - Used Telescope for a UI displaying relevant commits (git log -L) and a live preview of their changes (git diff commit^!)<br>
-            <br>
+  <style>
+    a:link {
+      color: #FFFF00;
+    }
 
-            <a href="https://github.com/ethanamaher/web-scanner"><b>web-scanner</b></a> <i>2025</i><br>
-            - python web scanner that will check a provided website for common security configuration errors. </br>
-            - checks that https is used, the web server version if provided, headers such as CSP, STS, XCTO, etc, as well as common files and directories that may be exposed. <br>
-            <br>
+    a:visited {
+      color: #00FFFF;
+    }
 
-            <a href="https://github.com/ethanamaher/AttendanceAppProject"><b>Attendance Tracker</b></a> <i>2025</i><br>
-            - UTDallas Capstone project proposed as an attendace tracking solution<br>
-            - a <a href="https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor">blazor</a> desktop and web app that pair to a database that tracks past student attendance statistics
-            for a professor to view<br>
-            <br>
+    table a:link {
+      color: #0000FF;
+    }
 
-            <a href="https://github.com/ethanamaher/tuiperacer"><b>TUIpe Racer</b></a> <i>2024</i><br>
-            - A terminal based typing test written in Go<br>
-            - uses the <a href="https://github.com/charmbracelet/bubbletea">bubbletea</a>
-                and <a href="https://github.com/charmbracelet/lipgloss">lipgloss</a> libraries
-                for the tui as well as a mysql database to store past scores<br>
-            <br>
+    table a:visited {
+      color: #800080;
+    }
 
-            <a href="https://github.com/ethanamaher/MNCA_Simulator"><b>MNCA Simulator</b></a> <i>2024</i><br>
-            - an <a href="https://github.com/hajimehoshi/ebiten">ebiten game engine</a> based
-                simulator to visualize the evolution of <a href="https://slackermanz.com/understanding-multiple-neighborhood-cellular-automata/">
-                multi neighborhood cellular automata</a><br>
-            <br>
-        </p>
-        <center>
-            <a href="index.html">home</a> 
-            |
-            <a href="projects.html">projects</a>
-        </center>
-    </body>
+    h1 {
+      color: #FFD700;
+    }
+  </style>
+</head>
+
+<body bgcolor="#000080" text="#FFFFFF">
+
+  <center>
+    <h1>
+      <font face="Comic Sans MS">Projects</font>
+    </h1>
+
+    <p>
+      <font face="Arial" size="2">
+        <b>
+          [ <a href="index.html">Home</a> ]
+          [ <a href="projects.html">Projects</a> ]
+          [ <a href="resources/resume.pdf">Resume</a> ]
+          [ <a href="https://github.com/ethanamaher">GitHub</a> ]
+        </b>
+      </font>
+    </p>
+
+    <table border="3" cellpadding="15" width="75%" bgcolor="#FFFFFF">
+      <tr>
+        <td valign="top">
+          <font color="#000000" face="Times New Roman" size="3">
+
+            <ul>
+              <li>
+                <b>Real-Time DNS Provenance Monitor</b> <i>(2025)</i><br>
+                Internal Research Project / Private Repository<br>
+                - Developed a C# application to correlate raw network events with DNS query logs.<br>
+                - Provides real-time visifbility into DNS and system network activity via ETW.<br>
+                - Designed asynchronously to handle high-volume event streams.
+              </li>
+              <br>
+
+              <li>
+                <a href="https://github.com/ethanamaher/todo-sidebar.nvim"><b>todo-sidebar.nvim</b></a>
+                <i>(2025)</i><br>
+                - Neovim plugin to view all TODO type statements in your git repo.<br>
+                - Opens a sidebar window to view and jump to statements like TODO, FIXME, and REVIEW.
+              </li>
+              <br>
+
+              <li>
+                <a href="https://github.com/ethanamaher/better-git-blame.nvim"><b>better-git-blame.nvim</b></a>
+                <i>(2025)</i><br>
+                - Neovim plugin to view the Git commit history for selected code blocks.<br>
+                - Uses Telescope UI for displaying relevant commits and live previews.
+              </li>
+              <br>
+
+              <li>
+                <a href="https://github.com/ethanamaher/web-scanner"><b>web-scanner</b></a> <i>(2025)</i><br>
+                - Python web scanner that checks for common security configuration errors.<br>
+                - Checks HTTPS usage, server versions, and security headers (CSP, STS, etc).
+              </li>
+              <br>
+
+              <li>
+                <a href="https://github.com/ethanamaher/AttendanceAppProject"><b>Attendance Tracker</b></a>
+                <i>(2025)</i><br>
+                - UTDallas Capstone project proposed as an attendance tracking solution.<br>
+                - Built with <a href="https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor">Blazor</a> for
+                desktop and web.
+              </li>
+              <br>
+
+              <li>
+                <a href="https://github.com/ethanamaher/tuiperacer"><b>TUIpe Racer</b></a> <i>(2024)</i><br>
+                - A terminal based typing test written in Go.<br>
+                - Uses <a href="https://github.com/charmbracelet/bubbletea">bubbletea</a> and <a
+                  href="https://github.com/charmbracelet/lipgloss">lipgloss</a> libraries.
+              </li>
+              <br>
+
+              <li>
+                <a href="https://github.com/ethanamaher/MNCA_Simulator"><b>MNCA Simulator</b></a> <i>(2024)</i><br>
+                - An <a href="https://github.com/hajimehoshi/ebiten">ebiten</a> game engine based simulator.<br>
+                - Visualizes the evolution of Multi-Neighborhood Cellular Automata.
+              </li>
+            </ul>
+
+          </font>
+        </td>
+      </tr>
+    </table>
+
+    <p>
+      <font face="Arial" size="2">
+        <b>
+          [ <a href="index.html">Home</a> ]
+          [ <a href="projects.html">Projects</a> ]
+          [ <a href="resources/resume.pdf">Resume</a> ]
+          [ <a href="https://github.com/ethanamaher">GitHub</a> ]
+        </b>
+      </font>
+    </p>
+  </center>
+
+</body>
+
 </html>
